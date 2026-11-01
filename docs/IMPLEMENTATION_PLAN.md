@@ -35,6 +35,22 @@ manuel doğrulama veya gerçek YouTube indirmesi yerine geçmez.
 
 ## Faz 2 — Video analizi (kullanıcı onayından sonra)
 
+### Faz 2.1 — URL doğrulama ve metadata (şimdi yetkilendirilen kapsam)
+
+- YouTube watch / kısa / shorts / mobil / music bağlantılarını güvenli ayrıştır,
+  tekil video kimliğini doğrula ve kanonik HTTPS URL üret.
+- Tipli, eksik alanlara dayanıklı metadata; `extract_info(download=False)`.
+- QThread yönetimi ve iptal edilebilir, süre sınırına sahip yt-dlp alt süreci.
+  İstek kimlikleriyle geç kalan sonuçları yok say. Güvenli kapanışı koru.
+- Basit URL alanı, yükleme/iptal/başarı/hata ve asenkron thumbnail/placeholder.
+- Kullanıcıya anlaşılır hata, teknik log; yerel Deno kurulumu ve belgeleme.
+- Deterministik servis/worker/UI testleri ve mevcut 26 testin yeniden çalışması.
+  Canlı YouTube erişimi ayrıca denenir; ağ engeli başarı sayılmaz.
+- Faz sonunda ilerleme kaydı ve yerel commit; **Faz 2.2'ye otomatik geçilmez**.
+
+Kalite listesi, format seçimi, boyut tahmini ve indirme bu alt fazın dışındadır.
+Faz 2'nin aşağıdaki genel görevleri alt fazlara bölünerek sürdürülecektir.
+
 - Sıkı YouTube URL doğrulaması; tipli metadata ve format modelleri.
 - İptal edilebilir arka plan yt-dlp analizi; zaman aşımı ve hata sınıflandırma.
 - Asenkron thumbnail; yalnızca mevcut çözünürlük/codec/FPS seçenekleri.

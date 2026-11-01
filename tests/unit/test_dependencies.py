@@ -55,6 +55,7 @@ def test_missing_package_has_actionable_remedy(available_environment, monkeypatc
 
 def test_missing_executables_do_not_attempt_subprocess(available_environment, monkeypatch):
     monkeypatch.setattr(deps.shutil, "which", lambda _: None)
+    monkeypatch.setattr(deps.sys, "executable", "/nonexistent-test-env/bin/python")
     monkeypatch.setattr(deps.subprocess, "run", lambda *a, **kw: pytest.fail("must not execute"))
     checks = deps.check_dependencies()
     assert all(check.state == deps.DependencyState.MISSING for check in checks[-3:])
@@ -107,3 +108,11 @@ def test_interruption_stops_before_additional_checks(available_environment, monk
     )
     checks = deps.check_dependencies(should_stop=lambda: True)
     assert [check.name for check in checks] == ["Python"]
+
+
+def test_local_deno_next_to_interpreter_is_discovered(monkeypatch, tmp_path):
+    monkeypatch.setattr(deps.shutil, "which", lambda _: None)
+    monkeypatch.setattr(deps.sys, "executable", str(tmp_path / "python"))
+    local_deno = tmp_path / "deno"
+    local_deno.touch()
+    assert deps.find_deno() == str(local_deno)

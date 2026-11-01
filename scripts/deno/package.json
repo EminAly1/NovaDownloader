@@ -1,0 +1,5 @@
+{
+  "name": "novadownloader-local-deno",
+  "private": true,
+  "dependencies": { "deno": "2.9.6" }
+}

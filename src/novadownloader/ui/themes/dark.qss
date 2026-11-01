@@ -31,3 +31,8 @@ QProgressBar { border: none; background: #29364c; border-radius: 3px; max-height
 QProgressBar::chunk { background: #8d9aff; border-radius: 3px; }
 QStatusBar { color: #b3bfd4; border-top: 1px solid #29364c; }
 QToolTip { background: #26334a; color: #ffffff; border: 1px solid #647697; }
+QLineEdit {
+    background: #101521; border: 1px solid #647697; border-radius: 8px;
+    padding: 12px; selection-background-color: #525ed5;
+}
+QLineEdit:focus { border: 2px solid #b8c5ff; }

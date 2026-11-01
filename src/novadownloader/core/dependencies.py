@@ -8,8 +8,15 @@ import sys
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from enum import StrEnum
+from pathlib import Path
 
 COMMAND_TIMEOUT = 2.0
+
+
+def find_deno() -> str | None:
+    executable = shutil.which("deno")
+    sibling = Path(sys.executable).parent / "deno"
+    return executable or (str(sibling) if sibling.is_file() else None)
 
 
 class DependencyState(StrEnum):
@@ -44,7 +51,7 @@ def _package_check(name: str, distribution: str, remedy: str) -> DependencyCheck
 
 
 def _command_check(name: str, command: str, flag: str, remedy: str) -> DependencyCheck:
-    executable = shutil.which(command)
+    executable = find_deno() if command == "deno" else shutil.which(command)
     if not executable:
         return DependencyCheck(
             name, DependencyState.MISSING, "", "PATH üzerinde bulunamadı.", remedy
@@ -70,12 +77,13 @@ def _command_check(name: str, command: str, flag: str, remedy: str) -> Dependenc
         return DependencyCheck(name, DependencyState.ERROR, "", "Sürüm kontrolü başarısız.", remedy)
     # Avoid showing arbitrary tool output or local paths in UI/copied diagnostics.
     output = result.stdout or result.stderr
-    pattern = r"\bdeno\s+(\d+\.\d+\.\d+)" if command == "deno" else r"\bversion\s+(\S+)"
+    is_deno = Path(command).name == "deno"
+    pattern = r"\bdeno\s+(\d+\.\d+\.\d+)" if is_deno else r"\bversion\s+(\S+)"
     match = re.search(pattern, output)
     if not match:
         return DependencyCheck(name, DependencyState.ERROR, "", "Sürüm bilgisi okunamadı.", remedy)
     version = match[1][:80]
-    if command == "deno" and tuple(map(int, version.split("."))) < (2, 3, 0):
+    if is_deno and tuple(map(int, version.split("."))) < (2, 3, 0):
         return DependencyCheck(
             name, DependencyState.UNSUPPORTED, version, "Deno 2.3.0 veya yenisi gerekli.", remedy
         )

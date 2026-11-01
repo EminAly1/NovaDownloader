@@ -25,6 +25,9 @@ jobs:
           sudo apt-get install -y ffmpeg libegl1 libgl1 libxcb-cursor0 libxkbcommon-x11-0
       - name: Install locked environment
         run: bash scripts/setup-dev.sh
+      - name: Install project-local Deno
+        run: bash scripts/setup-deno.sh
+      - run: uv run --frozen python -m novadownloader --check-dependencies
       - run: uv run --frozen ruff check .
       - run: uv run --frozen ruff format --check .
       - run: uv run --frozen pytest

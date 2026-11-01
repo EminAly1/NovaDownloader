@@ -33,3 +33,23 @@ artefakt hash'leri `uv.lock` içindedir. Yeni sürüm almak bilinçli bir
 
 Bulut ortamı Debian 13'tür; bu kayıt Zorin üzerinde çalışma kanıtı değildir.
 Zorin/Ubuntu GUI, sistem paketleri ve dağıtım/lisans kontrolleri ayrıca gerekir.
+
+## Faz 2.1 güncellemesi
+
+`yt-dlp[default]` 2026.10.26 / EJS 0.8.0 kilidi değiştirilmedi. yt-dlp'nin kurulu
+API açıklamasındaki `js_runtimes={"deno": {"path": ...}}` ve `extract_info`
+çağrısı kullanılıyor. Otomatik uzak EJS bileşeni indirilmez. FFmpeg/FFprobe bu
+fazın metadata işlemi için zorunlu değildir; birleştirme/dönüşüm yoktur.
+
+Resmî Deno belgesindeki npm yöntemi proje içine uyarlanmıştır:
+`scripts/setup-deno.sh` + `scripts/deno/{package.json,package-lock.json}`.
+**Deno 2.9.6** resmî `@deno/linux-x64-glibc` platform paketinden npm hash
+doğrulamasıyla kuruldu; `deno --version` ve çevrimdışı `deno eval` doğrulandı.
+Kurulum ikinci kez çalıştırıldı. Sistem geneline npm paketi kurulmadı;
+`.tools/deno` ve `.venv/bin/deno` kullanıldı. Lifecycle scriptleri kapalıdır.
+İndirilen ikili Node wrapper'ı olmadan doğrudan çalışır.
+
+YouTube metadata bazı durumlarda Deno olmadan okunabilse de challenge desteği
+güvenilir değildir. Bu sürüm Deno >=2.3.0 ve EJS yoksa analiz öncesi açık hata
+verir. Bu ön kontrol gerçek YouTube challenge çözümünün doğrulandığı anlamına
+gelmez; bulutun YouTube isteği proxy 403 ile engellenmiştir.

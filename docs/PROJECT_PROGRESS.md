@@ -1,5 +1,139 @@
 # NovaDownloader ilerleme kaydı
 
+## Güncel durum — Faz 2.1
+
+**Geliştirme ve deterministik doğrulama tamamlandı — 2026-11-01.** Canlı YouTube
+kabul kontrolü ağ politikası nedeniyle **doğrulanamadı**. Aşağıdaki Faz 1 kaydı
+tarihseldir; güncel Deno artık kurulu ve uygulamada metadata analiz alanı vardır.
+**Faz 2.2 başlatılmadı; açık kullanıcı onayı olmadan başlanmayacak.**
+
+### Ön kontrol ve kapsam
+
+Plan, ilerleme dosyası, tüm mevcut kaynak ve test altyapısı incelendi.
+`3537a45f4203b2225081cd7d16ac2462a93c5d58` doğrulandı; başlangıç çalışma ağacı
+temizdi. `work` dalı ve mevcut checkout korundu. Uzak depo hiçbir ref döndürmedi.
+Yeni depo/worktree oluşturulmadı, push yapılmadı.
+
+Bu alt faz yalnızca URL doğrulama, metadata, thumbnail, arka plan analizi ve
+hata/iptal yönetimidir. Kalite listesi, boyut hesabı, indirme, ses dönüştürme,
+playlist ve kapsamlı tasarım yenilemesi **uygulanmadı**.
+
+### Tamamlananlar ve dosyalar
+
+- `services/youtube_url_validator.py`: watch, youtu.be, shorts, m.youtube.com ve
+  music.youtube.com; 11 karakterlik video ID; kanonik HTTPS normalizasyonu.
+  Aldatıcı/kimlik bilgili alan adları, geçersiz port/şema/yol/ID, yinelenen v ve
+  playlist sayfası reddi. Tek videodaki yan parametreler atılır.
+- `models/video_metadata.py`: immutable tipli ID, başlık, kanal, thumbnail,
+  süre/okunabilir süre, kaynak URL, yayın tarihi, görüntülenme ve açıklama.
+  Eksik/bozuk alanlar, canlı yayın ve uploader/thumbnail fallback'leri.
+- `services/video_analyzer.py`, `workers/analysis_process.py`: gerçek
+  `YoutubeDL.extract_info(download=False)` yolu. Deno/EJS ön kontrolü; shell'siz
+  alt süreç, 45 saniye sınır, 12 saniye socket timeout, retry 1, playlist ve
+  uzak EJS bileşeni indirme kapalı. İptal/timeout'ta süreç grubunu temizleme.
+- `workers/analysis_worker.py`: QThread, başarı/hata/iptal sinyalleri ve Event.
+- `ui/analysis_panel.py`, `ui/thumbnail.py`, `ui/main_window.py`, QSS: URL giriş,
+  yapıştır/temizle/Enter, yükleme, iptal, yeniden deneme, gerçek modelden önizleme.
+  Aynı isteğin yinelenmesi engellenir; istek kimlikleri geç kalan sonucu reddeder.
+  Bir worker ve en yeni bekleyen istekle sınırlıdır. Kapanış her iki worker'ı bekler.
+- Thumbnail: asenkron Qt Network, ortam proxy'si ve TLS doğrulaması korunur.
+  Güvenilir HTTPS host, sınırlı veri/piksel/süre, kontrollü resim decoder,
+  bozuk/eksik/ağ hatasında placeholder. Metadata başarısı resim hatasından bağımsız.
+- `core/exceptions.py`, `core/logging_config.py`: kullanıcı mesajları ve hata
+  sınıflandırma; XDG state dönen log, URL/kimlik doğrulama maskeleme.
+- `core/dependencies.py`: PATH yanında Python yorumlayıcısının yanındaki Deno
+  keşfi; mevcut tanılama korunmuştur.
+- `scripts/setup-deno.sh`, `scripts/deno/{package.json,package-lock.json}`:
+  yalnızca proje içi, sabit sürüm ve hash doğrulamalı Deno kurulumu.
+- Yeni URL/model/servis/süreç/worker/UI/thumbnail testleri; CI, README,
+  IMPLEMENTATION_PLAN, ARCHITECTURE ve DEPENDENCIES belgeleri güncellendi.
+
+### Deno ve bağımlılık sonucu
+
+Deno 2.9.6, resmî npm platform paketinden `.tools/deno` içine kuruldu;
+`.venv/bin/deno` bağlantısı oluşturuldu. Sistem geneli değişmedi. npm lifecycle
+scriptleri çalıştırılmadı, lockfile integrity/TLS doğrulaması korundu.
+Kurulum tekrar çalıştırıldı; `deno --version` doğru sürümü verdi ve
+`deno eval 'console.log(2 + 2)'` sonucu **4** oldu. Yeni kullanıcı dosyaları veya
+farklı symlink hedefleri üzerine yazılmaması için koruma var.
+
+yt-dlp 2026.10.26 / EJS 0.8.0 / PySide6 6.12.0 kilidi korundu. Deno bazı
+metadata istekleri için teknik olarak şart olmayabilir, fakat challenge desteği
+güvenilir olmadığından yok/uyumsuz durumda açık bağımlılık hatası verilir.
+`--check-dependencies`: **7 bileşen hazır, çıkış 0**. FFmpeg bu fazda çağrılan
+bir medya işleyicisi değildir; yalnızca önceki tanılama kontrolündedir.
+
+### Test ve doğrulama kanıtı
+
+| Komut / doğrulama | Sonuç |
+| --- | --- |
+| `.venv/bin/pytest` (offscreen, yazılabilir test XDG yolları) | **135 geçti**, 0 başarısız, 0 atlandı; önceki 26 dahil |
+| Test dağılımı | 109 unit, 6 integration, 20 Qt/UI; 109 yeni test |
+| `.venv/bin/ruff check .` | Başarılı |
+| `.venv/bin/ruff format --check .` | Başarılı; 40 Python dosyası |
+| `QT_QPA_PLATFORM=offscreen … --smoke-test` | Pencere açıldı, 7 bileşen kontrol edildi, güvenle kapandı; çıkış 0 |
+| `bash scripts/setup-deno.sh` | İlk kurulum ve tekrar çalıştırma başarılı |
+| `bash -n scripts/setup-deno.sh` | Başarılı |
+| `uv lock --check` / `uv pip check` | Kilit güncel, 26 kurulu paket tutarlı |
+| `uv build` | Final kaynak ve belgelerle sdist ve wheel üretildi |
+| Bağımsız wheel kurulumu | Ayrı venv ve checkout dışından GUI smoke başarılı, yeni modüller içe aktarıldı |
+| Kurulu wheel alt süreç protokolü | Geçersiz URL için gerçek alt süreç `invalid_url` JSON hatasını döndürdü |
+| `git diff --check` | Başarılı |
+
+Testler gerçek `extract_info(..., download=False)` çağrı parametrelerini mock
+extractor ile denetler. Çocuk süreç JSON protokolü ve hata loglama ayrıca test
+edilir. Gerçek yerel subprocess başlatılıp iptal/timeout sonrasında reaped
+olduğu ve pipe'ların kapandığı doğrulanır. Qt testleri ana thread dışında analiz,
+yükleme/başarı/hata/iptal, gecikmiş yanıt, güvenli kapanış, thumbnail yükleme ve
+hata placeholder'ını kapsar. Uzun metadata ile 640×520 yatay taşma kontrolü var.
+
+İlk test turundaki tek başarısızlık, yaşam döngüsü doğru tamamlandıktan sonra
+silinmiş C++ worker nesnesini sorgulayan test kontrolündeydi. Kontrol,
+`finished` sinyali ve worker referansının serbest bırakılması üzerinden
+düzeltildi; son 135 test temiz geçti. Biçim/import hataları da giderildi.
+
+### Canlı kontrol ve bilinen sınırlar
+
+`VideoAnalyzer` ile yt-dlp'nin test videosu `BaW_jenozKc` için gerçek metadata
+analizi denendi; **başarısız**. Platform vekili `Tunnel connection failed:
+403 Forbidden` döndürdü. Hata kullanıcıya ağ hatası olarak sunuldu ve teknik
+ayrıntı loglandı. Bu sonuç Deno veya extractor başarısı değildir; gerçek video
+başlığı/kanal/thumbnail/süre bu makinede canlı olarak doğrulanamadı.
+
+Ağ izinleri kaydedilip uygulandıktan sonra aynı GUI kabul kontrolü tekrar
+çalıştırılmalı. Beklenen kanıt: gerçek başlık, kanal, süre ve thumbnail; başarısız
+resimde placeholder. Zorin/Ubuntu gerçek masaüstü ve HiDPI testi de henüz yoktur.
+GitHub Actions güncellendi ancak uzak CI çalıştırılmadı.
+
+### Bulut taslağı ve kalıcılık
+
+`install_script` ve `start_skill` Faz 2.1'e güncellendi; proje içi Deno kurulumu,
+normal/headless açılış, gerçek test sonucu ve faz sınırı kaydedildi. Mevcut boş
+özel ağ listesine yalnızca `www.youtube.com` ve `i.ytimg.com` eklendi; paket
+yöneticisi preset'i korundu. Bunlar **taslak** değişikliklerdir, mevcut runtime'a
+uygulandığı veya yayımlandığı iddia edilmez. Ortam ayarlarında inceleyip
+kaydetmek ve ortamı yayımlamak gerekir. Başka yt-dlp metadata host'u gerekirse
+gerçek hata ayrıca teşhis edilir; genel ağ izni açılmaz.
+
+Bu dosyayı içeren commit yerel `work` dalındadır; kimliği
+`git log -1 --oneline` ile bulunur. Uzak GitHub deposuna push yapılmadı.
+Faz sonu ayrıca `/workspace/library-files/NovaDownloader-phase2.1.bundle`
+tam Git bundle'ı oluşturulup `git bundle verify` ve bundle'daki `work` HEAD'inin
+yerel commit'le eşleşmesiyle doğrulanır. Bundle yalnızca commit edilmiş dosya/geçmişi içerir; `.venv`,
+`.tools`, log ve diğer ignored çıktılar içermez. Bu yedek aynı bulut dosya
+sistemindedir; ortam silinmesine karşı harici yedek veya yeni görevde geri
+yükleme garantisi değildir. İstenirse bundle dışarı alınabilir; push yetkisi
+olmadan uzak depo değiştirilmez.
+
+### Sonraki aşama — Faz 2.2 (başlatılmadı)
+
+1. Ağ erişimi sonrası Faz 2.1'in canlı metadata kabul kontrolünü tamamla.
+2. Mevcut analiz sonucundan tipli gerçek format keşfi ve filtreleme.
+3. Video/audio ayrımı, codec/kapsayıcı uyumluluğu ve format eşleştirme kuralları.
+4. Kesin / yaklaşık / bilinmeyen boyut servisi, çift ses sayımını önleyen hesap.
+5. Dinamik kalite seçenekleri ve deterministik testler; indirme motoru Faz 3'te.
+6. Kapsamı kullanıcıyla netleştirerek yalnızca yetkilendirilen Faz 2.2'yi uygula.
+
 ## Faz 1 — Depo inceleme ve temel altyapı
 
 **Durum: Tamamlandı — 2026-11-01.** Bu tamamlanma yalnızca ilk Qt penceresi ve

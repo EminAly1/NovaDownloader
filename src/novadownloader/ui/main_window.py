@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 
 from novadownloader import __version__
 from novadownloader.core.dependencies import DependencyCheck
+from novadownloader.ui.analysis_panel import AnalysisPanel
 from novadownloader.workers.dependency_worker import DependencyWorker
 
 STATE_LABELS = {
@@ -68,12 +69,16 @@ class MainWindow(QMainWindow):
         )
         layout.addWidget(
             _label(
-                "Faz 1 · Uygulama temeli\n"
-                "Bu sürüm çalışma ortamını denetler. YouTube analizi ve indirme "
-                "sonraki geliştirme fazlarında eklenecek.",
+                "Faz 2.1 · Video analizi\n"
+                "Video bilgilerini analiz edin. Kalite seçimi ve indirme "
+                "sonraki aşamalarda eklenecek.",
                 "phaseNote",
             )
         )
+
+        self.analysis_panel = AnalysisPanel(self)
+        self.analysis_panel.idle.connect(self._analysis_idle)
+        layout.addWidget(self.analysis_panel)
 
         card = QFrame()
         card.setObjectName("statusCard")
@@ -195,12 +200,19 @@ class MainWindow(QMainWindow):
         QApplication.clipboard().setText("\n".join(lines))
         self.statusBar().showMessage("Tanılama panoya kopyalandı.", 5000)
 
+    def _analysis_idle(self) -> None:
+        if self._closing:
+            self.close()
+
     def closeEvent(self, event: QCloseEvent) -> None:
-        if self._worker is not None and self._worker.isRunning():
+        analysis_stopped = self.analysis_panel.shutdown()
+        dependencies_running = self._worker is not None and self._worker.isRunning()
+        if dependencies_running or not analysis_stopped:
             self._closing = True
             self.setEnabled(False)
             self.statusBar().showMessage("Kontrol durduruluyor; güvenle kapatılıyor…")
-            self._worker.requestInterruption()
+            if dependencies_running:
+                self._worker.requestInterruption()
             event.ignore()
             return
         event.accept()
