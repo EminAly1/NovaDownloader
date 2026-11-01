@@ -4,6 +4,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from novadownloader.core.exceptions import AnalysisError, AnalysisErrorCode
+from novadownloader.models.media_format import MediaFormat, parse_formats
 from novadownloader.services.youtube_url_validator import YouTubeURL
 
 
@@ -52,6 +53,7 @@ class VideoMetadata:
     view_count: int | None = None
     is_live: bool = False
     description: str = ""
+    formats: tuple[MediaFormat, ...] = ()
 
     @property
     def readable_duration(self) -> str:
@@ -92,4 +94,5 @@ class VideoMetadata:
             view_count=int(views) if views is not None else None,
             is_live=info.get("is_live") is True,
             description=_text(info.get("description")),
+            formats=parse_formats(info.get("formats")),
         )

@@ -31,6 +31,8 @@ def extract_metadata(source: YouTubeURL, deno_path: str) -> VideoMetadata:
     options = {
         "noplaylist": True,
         "skip_download": True,
+        # Do not probe playable formats by downloading media samples.
+        "check_formats": False,
         "simulate": True,
         "quiet": True,
         "no_warnings": False,
@@ -57,6 +59,8 @@ def main() -> int:
         metadata = extract_metadata(source, sys.argv[2])
         # Wire keys intentionally match yt-dlp's small metadata subset.
         data = asdict(metadata)
+        if not metadata.formats:
+            data.pop("formats")
         data.update(
             id=metadata.video_id,
             duration=metadata.duration_seconds,

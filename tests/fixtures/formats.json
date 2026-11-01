@@ -1,0 +1,9 @@
+[
+  {"format_id":"313","width":3840,"height":2160,"fps":60,"ext":"webm","vcodec":"vp9","acodec":"none","tbr":16000,"protocol":"https"},
+  {"format_id":"299","width":1920,"height":1080,"fps":60,"ext":"mp4","vcodec":"avc1.64002a","acodec":"none","tbr":5000,"filesize":5000000000,"protocol":"https"},
+  {"format_id":"137","width":1920,"height":1080,"fps":30,"ext":"mp4","vcodec":"avc1.640028","acodec":"none","tbr":3000,"filesize_approx":1800000000,"protocol":"https"},
+  {"format_id":"248","width":1920,"height":1080,"fps":30,"ext":"webm","vcodec":"vp9","acodec":"none","tbr":2000,"protocol":"https"},
+  {"format_id":"22","width":1280,"height":720,"fps":30,"ext":"mp4","vcodec":"avc1.64001f","acodec":"mp4a.40.2","tbr":1800,"abr":128,"filesize":400000000,"protocol":"https"},
+  {"format_id":"140","ext":"m4a","vcodec":"none","acodec":"mp4a.40.2","abr":128,"tbr":128,"filesize":16000000,"protocol":"https","audio_channels":2,"asr":44100},
+  {"format_id":"251","ext":"webm","vcodec":"none","acodec":"opus","abr":160,"tbr":160,"protocol":"https","audio_channels":2,"asr":48000}
+]

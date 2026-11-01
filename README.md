@@ -2,9 +2,10 @@
 
 Zorin OS ve Ubuntu tabanlı Linux için Python 3.12 / PySide6 masaüstü uygulaması.
 
-**Mevcut durum: Faz 2.1.** Tekil YouTube URL doğrulaması, arka planda gerçek
-yt-dlp metadata analizi ve küçük resim desteği mevcuttur. Henüz kalite listesi,
-boyut hesabı veya indirme yoktur. Canlı YouTube doğrulaması bulut ağ politikasının
+**Mevcut durum: Faz 2.2.** Tekil YouTube URL doğrulaması, arka planda gerçek
+yt-dlp metadata analizi ve küçük resim desteği mevcuttur. Gerçek formatlardan
+kalite/seçim modelleri ve boyut hesabı eklendi. Kalite seçim ekranı Faz 2.3'e
+aittir; indirme ve gerçek dönüştürme henüz yoktur. Canlı YouTube doğrulaması ağ vekilinin
 403 yanıtı nedeniyle engellenmiştir; deterministik testler canlı doğrulama sayılmaz.
 İlerleme ve doğrulamalar: [PROJECT_PROGRESS](docs/PROJECT_PROGRESS.md).
 Sonraki fazlar yalnızca kullanıcının talimatıyla başlatılır.
@@ -117,6 +118,7 @@ adlarına ihtiyaç duyarsa ilgili hata ayrıca değerlendirilmelidir.
 - [Mimari](docs/ARCHITECTURE.md)
 - [İlerleme ve test kanıtı](docs/PROJECT_PROGRESS.md)
 - [Bağımlılık kararları ve resmî kaynaklar](docs/DEPENDENCIES.md)
+- [Format seçimi ve boyut modeli](docs/FORMAT_SELECTION.md)
 
 Uygulama verileri için XDG yolları tanımlıdır; bu faz yalnızca teknik log yazar,
 kişisel ayar veya görev verisi saklamaz. Kaynak kod MIT lisanslıdır. Qt/PySide6 ve diğer bağımlılıkların

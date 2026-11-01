@@ -1,4 +1,4 @@
-# Mimari — Faz 2.1
+# Mimari — Faz 2.2
 
 ## Mevcut modüller
 
@@ -32,8 +32,8 @@ süresini bekler. Yaşayan worker varken QApplication sonlandırılmaz.
 
 ## Sonraki fazlar
 
-Analiz iş mantığı `services`, tipli video metadata `models` altında mevcuttur.
-Format/görev modelleri ve `database` henüz eklenmedi. SQLite şeması, ayarlar, kuyruk,
+Analiz iş mantığı `services`, tipli video metadata ve format/seçim modelleri
+`models` altında mevcuttur. Görev modelleri ve `database` henüz eklenmedi. SQLite şeması, ayarlar, kuyruk,
 bildirim ve dosya açma bu fazda mevcut değildir.
 
 Tek bir uygulama süreci kullanılacak; web sunucusu, kullanıcı hesabı veya
@@ -58,8 +58,9 @@ altyapısı yt-dlp/FFmpeg'e dayanacak; özel HTTP indirme motoru yazılmayacak.
    EJS indirme kapalıdır. Ağ timeout 12 saniye, retry/extractor retry 1'dir.
    Çalışma proxy ve TLS ortamı miras alınır; erişim engelleri aşılmaz.
 5. `models/video_metadata.py` metadata'yı savunmacı şekilde immutable modele
-   dönüştürür. Formatlar ve medya URL'leri UI'ye taşınmaz; yalnızca küçük JSON
-   metadata sonucu geri gelir. Eksik alanlar varsayılanlarla temsil edilir.
+   dönüştürür. Faz 2.2 itibarıyla formatların güvenli alanları da JSON sonucu
+   içinde geri gelir; medya URL'leri ve HTTP kimlik bilgileri taşınmaz.
+   Eksik alanlar varsayılanlarla temsil edilir.
 6. Artan istek kimlikleri başarı/hata/iptal sonucunu GUI sınırında doğrular.
    Eski worker ve eski thumbnail yanıtı yeni sonucu değiştiremez. Yeni istek,
    eski worker'ın güvenle bitmesinden sonra başlar; sınırsız thread birikmez.
@@ -74,3 +75,19 @@ kimlik doğrulama alanlarını maskeler. yt-dlp debug/request dump toplanmaz.
 Geçersiz URL kullanıcıya gösterilir; teknik servis/thumbnail hataları loglanır.
 Faz 1 bağımlılık worker'ı henüz teknik log kullanmaz; mevcut güvenli hata
 bildirimi korunmuştur.
+
+## Faz 2.2 veri yolu
+
+`extract_info(download=False)` → `VideoMetadata.from_info` → `MediaFormat`
+tuple'ı → JSON alt süreç protokolü → ana süreçte yeniden doğrulama.
+`VideoMetadata.formats` varsayılan olarak boştur, önceki metadata tüketicileri
+çalışmaya devam eder. Kalite ekranı veya ikinci analiz worker'ı eklenmedi.
+
+`build_catalog(metadata.formats, metadata.duration_seconds, is_live=metadata.is_live)`
+çağrısı UI bağımsız `FormatCatalog` üretir. Seçimler format ID'lerini, eşleşen
+sesi, çıkış kapsayıcısını, öneriyi ve FFmpeg gereksinimini taşır. Kaynak akış
+boyutu ve nihai çıktı tahmini ayrı alanlardır. `make_mp3_option` yalnızca bir
+dönüşüm planı üretir; FFmpeg çağırmaz. Hesap ve seçim modülleri Qt veya ağ kullanmaz.
+
+Politikalar, birimler ve ertelenen işler [FORMAT_SELECTION.md](FORMAT_SELECTION.md)
+içinde açıklanır. Kalite seçeneklerinin UI'de sunulması Faz 2.3'e aittir.

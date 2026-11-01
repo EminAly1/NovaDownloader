@@ -1,6 +1,114 @@
 # NovaDownloader ilerleme kaydı
 
-## Güncel durum — Faz 2.1
+## Güncel durum — Faz 2.2
+
+**Tamamlandı — 2026-11-01.** Format/seçim modelleri ve boyut hesabı geliştirildi;
+**249 test geçti**. Canlı YouTube doğrulaması proxy 403 nedeniyle engellidir.
+Faz 2.1 ekranı korunmuştur. **Faz 2.3 başlatılmadı.** Aşağıdaki Faz 2.1 ve
+Faz 1 bölümleri, o aşamaların tamamlandığı andaki tarihsel kayıtlardır.
+
+### Ön kontrol, onaylanan push ve kalıcılık
+
+Plan, ilerleme kaydı, metadata/analiz akışı, yt-dlp format yapısı ve testler
+incelendi. Başlangıçta `work` dalı ve çalışma ağacı temizdi; şu commit'lerin
+mevcut geçmişte olduğu doğrulandı:
+
+- Faz 1: `3537a45f4203b2225081cd7d16ac2462a93c5d58`.
+- Faz 2.1: `36b82cd18f9b334bb547894c238eeb925f3d4682`.
+
+Kullanıcının bu iki faz için açık onayıyla `git push --set-upstream origin
+work:work` başarılı oldu. `git ls-remote origin refs/heads/work`, uzak
+`EminAly1/NovaDownloader` deposunda
+`36b82cd18f9b334bb547894c238eeb925f3d4682` döndürdü. Force push kullanılmadı.
+Faz 1 ve 2.1 artık GitHub `work` dalında korunuyor.
+
+Bu belgeyi içeren **Faz 2.2 commit'i yalnızca yereldedir**; kimliği
+`git log -1 --oneline` ile bulunur. Kullanıcı onayı olmadan push edilmez.
+Yerel commit, bulut dosya sisteminin silinmesine karşı uzak yedek garantisi
+değildir. Bu turda ortam taslağı değiştirilmedi veya yayımlanmadı.
+
+### Tamamlanan modüller ve davranışlar
+
+- `models/media_format.py`: yt-dlp formatlarını tipli, immutable modele
+  dönüştürme; sayısal doğrulama, codec/akış türü, gerçek literal format ID'leri.
+  DRM, storyboard, belirsiz/çakışan ID ve seçici takma adları elenir. Medya
+  URL'leri, cookie ve kimlik doğrulama başlıkları modele taşınmaz.
+- `models/format_selection.py`: video/ses seçenekleri, katalog, öneri,
+  birleştirme/remux/dönüşüm gereksinimi ve kesin/tahmini/bilinmeyen boyutlar.
+  Kaynak aktarım boyutu ile nihai çıktı boyutu ayrı alanlardır.
+- `services/format_selector.py`: gerçek çözünürlüklerden dinamik liste,
+  yüksekten düşüğe sıralama, FPS/codec/HDR/dil ayrımlarını koruma ve tekrarları
+  ayıklama. Muxed kaynak için tek ID, video-only + audio-only için `ID+ID`.
+  Muhafazakâr MP4/WebM/MKV uyumluluğu; uygun ses yoksa seçeneği kullanılamaz
+  olarak işaretleme. Varsayılan öneri gerçek seçeneklere dayanır.
+- `services/size_estimator.py`: filesize → filesize_approx → süre/bitrate →
+  bilinmiyor önceliği. `tbr` üzerine aynı ses tekrar eklenmez; ayrı akışlar
+  toplanır. Eksik bileşen bilinmeyen toplam üretir. SI MB/GB, büyük dosyalar,
+  geçersiz sayılar ve canlı yayın belirsizliği ele alınır.
+- Orijinal M4A/Opus ve diğer ses kaynakları; hedef MP3 bitrate'i ve FFmpeg
+  dönüşümü yalnızca veri modeli olarak hazırlanır. Kaynak kalite bilgisi
+  korunur; hedef bitrate artışının kalite artırdığı iddia edilmez.
+- `models/video_metadata.py`, `workers/analysis_process.py`: güvenli format
+  verileri mevcut alt süreç JSON protokolüne eklendi. Boş format listesi
+  metadata başarısını engellemez. `download=False`, `skip_download` ve
+  `simulate` korunur; `check_formats=False` örnek medya yoklamasını da kapatır.
+- Yeni fixture, unit ve integration testleri; README, mimari, uygulama planı
+  ve [FORMAT_SELECTION.md](FORMAT_SELECTION.md) güncellendi.
+
+### Test ve paket doğrulaması
+
+| Kontrol | Sonuç |
+| --- | --- |
+| Mevcut testler, geliştirme öncesi | 135 geçti |
+| Final `pytest -q`, offscreen | **249 geçti**, 0 başarısız, 0 atlandı; önceki 135 + 114 yeni |
+| `ruff check .` / `ruff format --check .` | Başarılı; 49 dosya biçimi uygun |
+| `uv lock --check` / `uv pip check` | Kilit güncel; 26 kurulu paket tutarlı |
+| `uv build` | sdist ve wheel başarıyla üretildi |
+| Bağımsız wheel kurulumu | Ayrı venv, kilitli runtime bağımlılıkları hash doğrulamalı; final wheel kuruldu |
+| Checkout ve kurulu wheel GUI smoke | İkisinde de pencere açıldı, 7 bileşen kontrol edildi, güvenle kapandı; çıkış 0 |
+| Kurulu wheel format API'si | Checkout dışından fixture ile 5 video / 2 ses seçeneği ve gerçek ID eşleşmesi doğrulandı |
+| `git diff --check` | Başarılı |
+
+Testler 4K/1080p/720p ve farklı yükseklikleri, FPS/codec farklarını, uyumlu ve
+eksik ses eşleştirmesini, yinelenen formatları, seri hale getirmeyi, kesin ve
+tahmini boyutları, büyük dosyaları, eksik/bozuk alanları ve sesin çift
+sayılmamasını kapsar. Gerçek yt-dlp format seçicisi üretilen ID ifadesini medya
+indirmeden doğrular. Mock çıkarıcı → çocuk JSON → ana süreç → katalog yolu ve
+mevcut Qt ekranının formatları koruması integration testleriyle doğrulanır.
+
+Bağımsız wheel için ek manuel API kontrolünün ilk komutunda zorunlu `source`
+argümanı atlanmıştı. Kontrol komutu düzeltildi ve başarılı geçti; uygulama
+kodunda bu nedenle değişiklik yapılmadı. Son test/lint kontrollerinde hata yoktur.
+
+### Bilinen sınırlar ve çalıştırılamayan kontroller
+
+Mevcut ağ izinleriyle `BaW_jenozKc` için gerçek analiz yeniden denendi;
+proxy **`Tunnel connection failed: 403 Forbidden`** döndürdü. Log incelendi;
+bu bir ağ erişimi engelidir, format motoru veya extractor kusuru olarak
+sınıflandırılmadı. Canlı metadata/format/thumbnail başarısı doğrulanamadı.
+Mock testler canlı kabul kontrolü yerine sunulmaz; erişim sağlandığında
+canlı analiz ayrıca doğrulanmalıdır.
+
+Python 3.12.14, PySide6 6.12.0, yt-dlp 2026.10.26, EJS 0.8.0, proje içi Deno
+2.9.6 ve FFmpeg 7.1.5 korundu; bağımlılık kilidi değişmedi. Gerçek FFmpeg
+birleştirme/dönüştürme ve medya indirme bu fazın kapsamı dışındadır, çalıştırılmadı.
+Format varlığı çıkarıcı verisidir; gelecekteki indirme anında erişilebilirlik
+ve boyut değişebilir. Bilinmeyen codec uyumluluğu varsayılmaz. Gerçek
+Zorin/Ubuntu masaüstü ve uzak CI sonucu bu turda doğrulanmadı.
+
+### Sonraki aşama — Faz 2.3 (başlatılmadı)
+
+1. Kullanıcı Faz 2.2'yi onayladığında ilgili commit'i normal push ile gönder
+   ve uzak dal/commit eşleşmesini doğrula; beklenmeyen uzak değişikliği ezme.
+2. Ayrı Faz 2.3 yetkilendirmesiyle mevcut `FormatCatalog` üzerinden kalite
+   ve ses seçim ekranını geliştir; analiz/iptal yaşam döngüsünü koru.
+3. Seçim, öneri, codec/FPS, kaynak/çıktı boyutu ve FFmpeg gereksinimini göster.
+4. Boş liste, uygun ses yokluğu, bilinmeyen boyut ve yeni analizde seçim
+   sıfırlama davranışlarını UI testleriyle doğrula.
+5. Ağ erişimi sağlandığında canlı kabul kontrolünü tamamla. İndirme motoruna
+   veya gerçek ses dönüştürmeye otomatik geçme.
+
+## Faz 2.1 — Tarihsel tamamlanma kaydı
 
 **Geliştirme ve deterministik doğrulama tamamlandı — 2026-11-01.** Canlı YouTube
 kabul kontrolü ağ politikası nedeniyle **doğrulanamadı**. Aşağıdaki Faz 1 kaydı

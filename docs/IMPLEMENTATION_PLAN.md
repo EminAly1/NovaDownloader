@@ -13,7 +13,7 @@ commit oluşturulur ve durulur. Kullanıcı “Sonraki faza geç” demeden sonr
 başlatılmaz. Onaysız push yapılmaz. Yeni oturumda önce bu dosya ve
 `docs/PROJECT_PROGRESS.md` okunur.
 
-## Faz 1 — Depo inceleme ve temel altyapı (bu tur)
+## Faz 1 — Depo inceleme ve temel altyapı (tamamlandı, onaylandı)
 
 1. Git durumu, araçlar ve resmî kurulum gereksinimlerini doğrula.
 2. `src` yerleşimi, `pyproject.toml`, Python sürüm tercihi ve kilitli geliştirme
@@ -33,9 +33,9 @@ başlatılmaz. Onaysız push yapılmaz. Yeni oturumda önce bu dosya ve
 bağımlılık eksikleri anlaşılır gösterilir. Headless test, Zorin masaüstünde
 manuel doğrulama veya gerçek YouTube indirmesi yerine geçmez.
 
-## Faz 2 — Video analizi (kullanıcı onayından sonra)
+## Faz 2 — Video analizi (alt fazlar halinde)
 
-### Faz 2.1 — URL doğrulama ve metadata (şimdi yetkilendirilen kapsam)
+### Faz 2.1 — URL doğrulama ve metadata (tamamlandı, onaylandı)
 
 - YouTube watch / kısa / shorts / mobil / music bağlantılarını güvenli ayrıştır,
   tekil video kimliğini doğrula ve kanonik HTTPS URL üret.
@@ -49,6 +49,32 @@ manuel doğrulama veya gerçek YouTube indirmesi yerine geçmez.
 - Faz sonunda ilerleme kaydı ve yerel commit; **Faz 2.2'ye otomatik geçilmez**.
 
 Kalite listesi, format seçimi, boyut tahmini ve indirme bu alt fazın dışındadır.
+
+### Faz 2.2 — Format seçimi ve boyut hesabı
+
+Durum: Tamamlandı; 249 test başarılı. Canlı doğrulama proxy 403 nedeniyle engelli.
+Faz 1 ve 2.1 onaylandı; `origin/work`
+normal push sonrası `36b82cd18f9b334bb547894c238eeb925f3d4682` olarak doğrulandı.
+
+- Mevcut metadata akışını URL/kimlik bilgisi taşımayan tipli formatlarla genişlet.
+- Gerçek video/audio keşfi; çözünürlük/FPS/codec ayrımı ve deterministik sıralama.
+- Uyumlu akış eşleştirme, MP4/WebM/MKV kapsayıcı ve FFmpeg gereksinimleri.
+- Kesin/tahmini/bilinmeyen kaynak boyutu ile nihai çıktı boyutunu ayır.
+- Ses kaynakları ve yalnızca model düzeyinde MP3 dönüşüm seçeneği.
+- Mevcut 135 test + yeni deterministik model/servis/protokol testleri, Ruff,
+  paket ve headless GUI doğrulaması. Canlı erişimi mevcut izinlerle ayrıca dene.
+- Yerel commit oluştur; Faz 2.2 henüz onaylanmadığı için push yapma ve dur.
+
+Kapsam dışı: Faz 2.3 kalite seçim ekranı, indirme ve gerçek dönüştürme.
+
+### Faz 2.3 — Kalite seçim arayüzü (başlatılmadı)
+
+- Onay sonrası mevcut `FormatCatalog` üzerinden video/ses seçeneklerini sun.
+- Seçimi, boyut kesinliğini, kaynak/çıktı farkını ve FFmpeg gereksinimini göster.
+- Kayıp ses/format ve bilinmeyen değer durumları için UI testleri ekle.
+- Faz 2.2 commit'ini yalnızca kullanıcı onayından sonra push edip remote'u doğrula.
+- İndirme motoruna bu alt faz üzerinden otomatik geçme.
+
 Faz 2'nin aşağıdaki genel görevleri alt fazlara bölünerek sürdürülecektir.
 
 - Sıkı YouTube URL doğrulaması; tipli metadata ve format modelleri.
