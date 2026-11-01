@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "novadownloader"
+version = "0.1.0"
+description = "Zorin OS ve Linux için yerel video/ses indirme uygulaması"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = "MIT"
+authors = [{name = "NovaDownloader contributors"}]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Multimedia :: Video",
+]
+dependencies = [
+  "PySide6>=6.8,<7",
+  "yt-dlp[default]>=2026.10.26",
+]
+
+[project.gui-scripts]
+novadownloader = "novadownloader.app:main"
+
+[dependency-groups]
+dev = [
+  "pytest>=9,<10",
+  "pytest-qt>=4.5,<5",
+  "ruff>=0.17,<0.18",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/novadownloader"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+qt_api = "pyside6"
+addopts = "-ra --strict-markers"
+filterwarnings = ["error"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
