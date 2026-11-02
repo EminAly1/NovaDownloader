@@ -97,5 +97,5 @@ Deterministik fixture ile çıkarıcı → çocuk JSON → ana süreç → katal
 Qt metadata ekranı test edilir. yt-dlp'nin gerçek format seçicisiyle üretilen
 ID ifadesi de medya indirmeden çalıştırılır. Bu testler canlı YouTube erişimi veya
 FFmpeg medya işleme testi değildir. Canlı denemede proxy 403 engeli devam etti.
-Faz 2.3 UI'si, kullanıcı tercihlerinin kalıcılığı, gerçek indirme/dönüştürme ve
-platform erişiminin doğrulanması ertelenmiştir.
+Faz 2.3 UI'si bu modelleri kullanır. Kullanıcı tercihlerinin kalıcılığı, gerçek
+indirme/dönüştürme ve canlı platform erişiminin doğrulanması ertelenmiştir.

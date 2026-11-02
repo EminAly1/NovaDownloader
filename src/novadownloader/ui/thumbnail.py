@@ -3,7 +3,7 @@
 import os
 from urllib.parse import unquote, urlsplit
 
-from PySide6.QtCore import QBuffer, QByteArray, QIODevice, Qt, QTimer, QUrl
+from PySide6.QtCore import QBuffer, QByteArray, QIODevice, QSize, Qt, QTimer, QUrl
 from PySide6.QtGui import QImageReader, QPixmap
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkProxy, QNetworkReply, QNetworkRequest
 from PySide6.QtWidgets import QLabel
@@ -18,7 +18,8 @@ MAX_IMAGE_PIXELS = 16_000_000
 class ThumbnailLabel(QLabel):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedSize(160, 96)
+        self._image = None
+        self.setFixedSize(224, 126)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setWordWrap(True)
         self.setAccessibleName("Video küçük resmi")
@@ -59,6 +60,7 @@ class ThumbnailLabel(QLabel):
 
     def load_url(self, url: str | None) -> None:
         self.cancel()
+        self._image = None
         self.clear()
         self.setText("Önizleme yok")
         if not safe_thumbnail_url(url):
@@ -122,9 +124,25 @@ class ThumbnailLabel(QLabel):
         size = reader.size()
         if not size.isValid() or size.width() * size.height() > MAX_IMAGE_PIXELS:
             return False
-        reader.setScaledSize(size.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatio))
+        reader.setScaledSize(size.scaled(QSize(448, 252), Qt.AspectRatioMode.KeepAspectRatio))
         image = reader.read()
         if image.isNull():
             return False
-        self.setPixmap(QPixmap.fromImage(image))
+        self._image = QPixmap.fromImage(image)
+        self._refresh_pixmap()
         return True
+
+    def _refresh_pixmap(self):
+        if self._image is not None:
+            ratio = self.devicePixelRatioF()
+            pixmap = self._image.scaled(
+                self.size() * ratio,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+            pixmap.setDevicePixelRatio(ratio)
+            self.setPixmap(pixmap)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._refresh_pixmap()

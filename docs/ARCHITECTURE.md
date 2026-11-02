@@ -1,4 +1,4 @@
-# Mimari — Faz 2.2
+# Mimari — Faz 2.3
 
 ## Mevcut modüller
 
@@ -81,7 +81,8 @@ bildirimi korunmuştur.
 `extract_info(download=False)` → `VideoMetadata.from_info` → `MediaFormat`
 tuple'ı → JSON alt süreç protokolü → ana süreçte yeniden doğrulama.
 `VideoMetadata.formats` varsayılan olarak boştur, önceki metadata tüketicileri
-çalışmaya devam eder. Kalite ekranı veya ikinci analiz worker'ı eklenmedi.
+çalışmaya devam eder. Faz 2.3 kalite ekranı aynı sonucu kullanır; ikinci analiz
+worker'ı veya ek ağ isteği oluşturulmaz.
 
 `build_catalog(metadata.formats, metadata.duration_seconds, is_live=metadata.is_live)`
 çağrısı UI bağımsız `FormatCatalog` üretir. Seçimler format ID'lerini, eşleşen
@@ -90,4 +91,39 @@ boyutu ve nihai çıktı tahmini ayrı alanlardır. `make_mp3_option` yalnızca 
 dönüşüm planı üretir; FFmpeg çağırmaz. Hesap ve seçim modülleri Qt veya ağ kullanmaz.
 
 Politikalar, birimler ve ertelenen işler [FORMAT_SELECTION.md](FORMAT_SELECTION.md)
-içinde açıklanır. Kalite seçeneklerinin UI'de sunulması Faz 2.3'e aittir.
+içinde açıklanır. Kalite seçenekleri Faz 2.3 arayüzünde sunulur.
+
+## Faz 2.3 widget ve seçim akışı
+
+- `ui/theme.py`: merkezi renk/boşluk/radius token'ları; `dark.qss` şablonunu
+  uygulama açılışında çözer. Hover, focus, checked, error ve disabled durumları
+  ortak kurallardadır. `ui/icons.py` aynı palette özgün SVG çizgi ikonları üretir.
+- `MainWindow`: sol navigasyon + dört kaydırılabilir sayfa. 900 px altında
+  erişilebilir ad/tooltips korunan kompakt ikon navigasyonu; minimum 640×520.
+  Tanılama Ayarlar'a taşındı, mevcut worker/kopyalama/tekrar kontrol korunur.
+- `UrlInputWidget`, `VideoPreviewCard`, `EmptyStateWidget`: ortak görünüm
+  bileşenleri. Yükleme/hata/boş durumları ayrı dosyalar yerine URL ve durum
+  bileşenlerinde tutulur. Başlık üç satırda elide edilir; tam metin tooltip ve
+  erişilebilir adda korunur. Thumbnail 16:9'dur, ölçek/DPI değişiminde sınırlı
+  çözümlenmiş görüntüden yeniden ölçeklenir; ağ ve decoder sınırları korunur.
+- `AnalysisPanel`: mevcut request ID, pending istek ve worker yaşam döngüsünü
+  sürdürür. URL düzenleme, temizleme, yeni analiz ve iptal metadata/kalite/özet
+  durumunu birlikte sıfırlar. Eski sonuç seçimi yeniden etkinleştiremez.
+- `services/selection_service.py`: `build_catalog` sonucuna, desteklenen ilk
+  gerçek ses kaynağından `make_mp3_option` ile tek 192 kbps MP3 dönüşüm planı
+  ekler. Codec/sıralama/boyut kurallarını yeniden yazmaz; Qt ve ağ içermez.
+- `MediaTypeSelector`, `QualityOptionCard`, `QualitySelectionPanel`:
+  `QButtonGroup` ile tek seçim, mod başına geçerli seçimi hatırlama, ok/Home/End
+  desteği. Odaklanan satır kaydırma alanında görünür kılınır. UI boyut hesaplamaz;
+  servis modellerindeki kesinlik ve hazır boyut etiketlerini gösterir.
+- `DownloadSummaryCard`: seçim, kaynak/çıktı farkı, FFmpeg gereksinimi ve
+  isteğe bağlı teknik ayrıntılar. İndirme butonu daima devre dışıdır.
+- `models/download_request.py`: video ID/kaynak URL/başlık/FormatSelection
+  içeren immutable istek. Yalnızca metadata'ya ait kullanılabilir akışları
+  kabul eder. Dosya yolu, indirme yürütücüsü veya postprocessor başlatmaz.
+
+Seçim bu oturumda bellektedir; yeni analizde ve kapanışta temizlenir. Sayfa
+geçişi analiz worker'ını çoğaltmaz, pencere kapanışı her iki worker'ı bekler.
+`tests/ui/test_phase23.py` gerçek widget davranışını; `scripts/capture-ui.py`
+yalnızca geliştirmede etiketli fixture ile ekran görüntülerini doğrular.
+Üretim giriş noktasında fixture veya sahte başarı yolu yoktur.

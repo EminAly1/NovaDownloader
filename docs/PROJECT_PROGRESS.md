@@ -1,6 +1,127 @@
 # NovaDownloader ilerleme kaydı
 
-## Güncel durum — Faz 2.2
+## Güncel durum — Faz 2.3: Premium UI/UX ve video analiz entegrasyonu
+
+**Tamamlandı — 2026-11-02.** Modern Qt arayüzü gerçek analiz ve format/boyut
+servislerine bağlandı. **280 test geçti**; yeni 24 UI testi ayrıca **2× DPI**
+ile geçti. Canlı YouTube doğrulaması mevcut proxy 403 nedeniyle engellidir.
+**Faz 3 başlatılmadı.** Aşağıdaki eski faz bölümleri tarihsel kayıtlardır.
+
+### İlk işlem — Onaylanan Faz 2.2 GitHub kaydı
+
+Plan ve ilerleme dosyaları okundu; `work` dalı, temiz çalışma ağacı ve
+`ed7092e` commit'inin HEAD/geçmişte bulunduğu doğrulandı. Uzak `work` başlangıçta
+`36b82cd18f9b334bb547894c238eeb925f3d4682` idi. Kullanıcının açık onayıyla
+`git push --set-upstream origin work:work` başarılı oldu. Sonraki
+`git ls-remote origin refs/heads/work` sonucu:
+
+`ed7092ed1e83f3a877e9a5cf273fbe827ce4912b`
+
+Force push kullanılmadı; beklenmeyen uzak değişiklik üzerine yazılmadı.
+Faz 1, 2.1 ve 2.2 artık GitHub `work` dalındadır. Bu belgeyi içeren **Faz 2.3
+commit'i yalnızca yereldedir**; kimliği `git log -1 --oneline` ile bulunur.
+Onaysız push yapılmaz. Yerel commit bulut dosya sisteminin silinmesine karşı
+uzak yedek garantisi değildir. Bu turda ortam yapılandırması değiştirilmedi
+veya yayımlanmadı; önceki fazlar yeniden uygulanmadı.
+
+### Geliştirilen ekranlar ve bileşenler
+
+- Ana sayfa: URL kartı → 16:9 video önizleme → video/ses modu → dinamik kalite
+  satırları → seçim özeti. İndirme aksiyonu görünür fakat disabled; açıklaması
+  sonraki fazı belirtir. Sahte dosya/indirme ilerlemesi/başarısı yoktur.
+- Sol navigasyon: logo, Ana Sayfa, İndirilenler, Geçmiş, Ayarlar. Aktif sayfa
+  belirgin; dar pencerede isimleri tooltip ve erişilebilir adlarda korunan
+  kompakt ikon navigasyonu. Gelecek özellikler için dürüst boş sayfalar.
+- Ayarlar: gelecekteki tercihlerin açıklaması ve mevcut çalışan ortam
+  tanılaması. Önceki tekrar kontrol, durum ve panoya kopyalama korunur.
+- `ui/theme.py`, `ui/themes/dark.qss`, `ui/icons.py`: merkezi koyu renk
+  token'ları, ortak boşluk/radius, tipografi, özgün çizgi ikonları ve
+  hover/focus/checked/disabled/error durumları.
+- `ui/components.py`: `UrlInputWidget`, `VideoPreviewCard`, `EmptyStateWidget`,
+  sınırlandırılmış metin etiketi. Loading/error durumları ortak URL ve durum
+  bileşenlerinde tutulur; gereksiz küçük dosyalar oluşturulmadı.
+- `ui/quality_panel.py`: `MediaTypeSelector`, `QualityOptionCard`,
+  `QualitySelectionPanel`, `DownloadSummaryCard`. Tek seçim, öneri, FPS/codec,
+  kesin/tahmini/bilinmeyen kaynak boyutu ve çıktı farkı. Teknik ayrıntılar
+  gerektiğinde açılır. Ok/Space/Home/End ile seçim ve odak satırına kaydırma.
+- `ui/thumbnail.py`: mevcut asenkron, sınırlı ağ/decoder yolu korunarak
+  16:9 ve DPI/yeniden boyutlandırmaya uygun görüntü ölçekleme eklendi.
+  Uzun başlık üç satırda elide; tam metin tooltip ve erişilebilir adda kalır.
+- `services/selection_service.py`: mevcut `build_catalog` ve
+  `make_mp3_option` bileşimi. Desteklenen gerçek ses kaynağından bir 192 kbps
+  hedef MP3 planı; kalite/codec/eşleştirme/boyut mantığı tekrar yazılmadı.
+- `models/download_request.py`: metadata'ya ait kullanılabilir akışları
+  doğrulayan immutable seçili istek modeli; indirme veya FFmpeg çağırmaz.
+
+### Gerçek servis entegrasyonu ve durum yönetimi
+
+Üretim giriş noktası `VideoAnalyzer` / `AnalysisWorker` / yt-dlp alt sürecini
+kullanır. UI doğrudan yt-dlp veya FFmpeg çağırmaz. Boyut hesabı ve öneriler
+Faz 2.2 servislerinden gelir; UI'de tekrar hesaplanmaz. Mod değişimi ağ
+isteği oluşturmaz. Aynı video için mod başına geçerli seçim korunur.
+
+URL düzenleme, temizleme, yeni analiz veya iptal eski metadata/format/isteği
+birlikte temizler. İstek kimlikleri eski yanıtları reddeder; tek worker ve en
+yeni bekleyen istek sınırı korunur. Navigasyon analizi çoğaltmaz. Analiz veya
+bağımlılık kontrolü sürerken kapatma kooperatif durdurmayı bekler.
+
+### Doğrulama sonuçları
+
+| Kontrol | Sonuç |
+| --- | --- |
+| Değişiklik öncesi mevcut testler | 249 geçti |
+| Tam pytest | **280 geçti**, 0 başarısız, 0 atlandı; önceki 249 değiştirilmeden korundu |
+| Yeni testler | 7 model/servis + 24 Qt/UI |
+| `QT_SCALE_FACTOR=2` ile yeni UI testleri | **24 geçti**; 280 toplamına yeniden eklenmez |
+| `ruff check .` / `ruff format --check .` | Başarılı; 59 dosya biçimi uygun |
+| `uv lock --check` / `uv pip check` | Kilit güncel; 26 geliştirme paketi tutarlı |
+| `uv build` | sdist ve wheel üretildi |
+| Bağımsız wheel kurulumu | Yeni venv, kilitli 17 runtime paketi hash doğrulamalı, wheel `--no-deps` ile kuruldu |
+| Checkout ve kurulu wheel GUI smoke | Pencere açıldı, 7 bileşen kontrol edildi, güvenle kapandı; çıkış 0 |
+| Kurulu wheel seçim akışı | Checkout dışından tema/ikonlar, 5 video seçeneği, gerçek ID, MP3 özeti ve disabled indirme doğrulandı |
+| Görsel doğrulama | 11 akış/durum görüntüsü + incelenen 2× DPI görüntüsü; [UI_REVIEW](UI_REVIEW.md) |
+| `git diff --check` | Başarılı |
+| Canlı YouTube | **Başarısız: proxy 403**, uygulama/format kusuru olarak sınıflandırılmadı |
+
+Yeni testler gerçek widget davranışıyla yapıştır/temizle/Enter, metadata,
+loading/iptal/hata, kalite/mod seçimi, boş veya eşleşmeyen format, boyut
+kesinliği, stale seçim/yanıt, hızlı tekrar, navigasyonda analiz, güvenli kapanış,
+uzun başlık, 1280×800 / 1024×700 / 640×520 ve thumbnail ölçeklemesini kapsar.
+
+İlk geçişte gizli Ayarlar sayfasının yerleşim başlangıcı eski üç geometri
+kontrolünü etkiledi; yerleşim başlatılması düzeltildi, eski testler değiştirilmedi.
+Yeni uzun liste testinin yakaladığı klavye odak/kaydırma sorunu giderildi.
+Bir yeni fixture seçimi ve bir yerleşim bekleme kontrolü düzeltildi; final
+testlerinde hata kalmadı. Paket kurulumundaki cross-filesystem hardlink uyarısı
+normal dosya kopyalama fallback'iyle sonuçlandı; kurulum başarılıdır.
+
+### Bilinen sınırlar
+
+- Yeni runtime'da `BaW_jenozKc` analizi bir kez denendi. Logda
+  `Tunnel connection failed: 403 Forbidden` doğrulandı. Proxy/TLS/ağ izinleri
+  aşılmadı; canlı video metadata/format/thumbnail kabulü doğrulanamadı.
+- Görseller etiketli deterministik test verisidir; gerçek YouTube başarısı
+  yerine sunulmaz. `scripts/capture-ui.py` yalnızca kendi geliştirme sürecinde
+  mock kullanır; üretim uygulaması fixture yüklemez.
+- Zorin/Ubuntu gerçek masaüstü, fiziksel HiDPI monitör, ekran okuyucu ve uzak
+  GitHub Actions sonucu doğrulanmadı. Headless Qt bunların yerine geçmez.
+- İndirme, FFmpeg işleme, kuyruk, geçmiş/ayar kalıcılığı henüz yoktur.
+  MP3 seçeneği şu an tek 192 kbps hedef planıdır; kaynak kalitesini artırmaz.
+- Bağımlılıklar ve kilit değişmedi. Python 3.12.14, PySide6 6.12.0,
+  yt-dlp 2026.10.26, EJS 0.8.0, proje içi Deno 2.9.6 korunmuştur.
+
+### Sonraki aşama — Faz 3 (başlatılmadı)
+
+1. Faz 2.3 kullanıcı onayından sonra normal push ve uzak commit doğrulaması.
+2. Ayrı Faz 3 talimatıyla `DownloadRequest` modelini gerçek yt-dlp indirme
+   servisi/worker'ına bağla; indirme anında format erişimini yeniden doğrula.
+3. Hedef klasör/disk/izin/güvenli dosya adı ve üzerine yazma korumaları.
+4. Gerçek ilerleme, iptal, desteklenen devam etme ve hata durumları.
+5. FFmpeg birleştirme/remux/MP3 işleme, nihai çıktı doğrulaması ve testleri.
+6. İndirme butonunu ancak gerçek motor hazır olduğunda etkinleştir; ağ erişimi
+   sağlandığında canlı analiz kabulünü ayrıca tamamla.
+
+## Faz 2.2 — Tarihsel tamamlanma kaydı
 
 **Tamamlandı — 2026-11-01.** Format/seçim modelleri ve boyut hesabı geliştirildi;
 **249 test geçti**. Canlı YouTube doğrulaması proxy 403 nedeniyle engellidir.

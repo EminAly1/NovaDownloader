@@ -50,11 +50,11 @@ manuel doğrulama veya gerçek YouTube indirmesi yerine geçmez.
 
 Kalite listesi, format seçimi, boyut tahmini ve indirme bu alt fazın dışındadır.
 
-### Faz 2.2 — Format seçimi ve boyut hesabı
+### Faz 2.2 — Format seçimi ve boyut hesabı (tamamlandı, onaylandı)
 
 Durum: Tamamlandı; 249 test başarılı. Canlı doğrulama proxy 403 nedeniyle engelli.
-Faz 1 ve 2.1 onaylandı; `origin/work`
-normal push sonrası `36b82cd18f9b334bb547894c238eeb925f3d4682` olarak doğrulandı.
+Faz 1, 2.1 ve 2.2 onaylandı. 2026-11-02 normal push sonrası uzak `work` dalı
+`ed7092ed1e83f3a877e9a5cf273fbe827ce4912b` olarak doğrulandı.
 
 - Mevcut metadata akışını URL/kimlik bilgisi taşımayan tipli formatlarla genişlet.
 - Gerçek video/audio keşfi; çözünürlük/FPS/codec ayrımı ve deterministik sıralama.
@@ -63,17 +63,23 @@ normal push sonrası `36b82cd18f9b334bb547894c238eeb925f3d4682` olarak doğrulan
 - Ses kaynakları ve yalnızca model düzeyinde MP3 dönüşüm seçeneği.
 - Mevcut 135 test + yeni deterministik model/servis/protokol testleri, Ruff,
   paket ve headless GUI doğrulaması. Canlı erişimi mevcut izinlerle ayrıca dene.
-- Yerel commit oluştur; Faz 2.2 henüz onaylanmadığı için push yapma ve dur.
+- Faz sonu commit oluşturuldu; sonraki kullanıcı onayıyla GitHub kaydı tamamlandı.
 
 Kapsam dışı: Faz 2.3 kalite seçim ekranı, indirme ve gerçek dönüştürme.
 
-### Faz 2.3 — Kalite seçim arayüzü (başlatılmadı)
+### Faz 2.3 — Premium UI/UX ve analiz entegrasyonu (tamamlandı)
 
-- Onay sonrası mevcut `FormatCatalog` üzerinden video/ses seçeneklerini sun.
-- Seçimi, boyut kesinliğini, kaynak/çıktı farkını ve FFmpeg gereksinimini göster.
-- Kayıp ses/format ve bilinmeyen değer durumları için UI testleri ekle.
-- Faz 2.2 commit'ini yalnızca kullanıcı onayından sonra push edip remote'u doğrula.
-- İndirme motoruna bu alt faz üzerinden otomatik geçme.
+Durum: 2026-11-02; 280 test başarılı, yeni 24 Qt/UI testi ayrıca 2× DPI ile
+geçti. Canlı erişim proxy 403 nedeniyle doğrulanamadı.
+
+- Merkezi koyu tema, özgün ikonlar, kompakt sol navigasyon ve sayfa yapısı.
+- Gerçek analiz worker'ına bağlı URL, loading/iptal/hata ve 16:9 önizleme.
+- Gerçek katalogdan video/ses seçenekleri; tek seçim, klavye ve mod hafızası.
+- Kaynak/çıktı boyutları, FFmpeg gereksinimi, teknik ayrıntılar ve seçim özeti.
+- İndirme başlatmayan tipli `DownloadRequest`; dürüst disabled indirme alanı.
+- Ayarlar'da mevcut ortam tanılaması; diğer gelecekteki özellikler için açıklama.
+- 1280×800, 1024×700, 640×520 ve 2× DPI; gerçek Qt ekran görüntüleri incelendi.
+- Faz 2.3 yerel commit olarak kaydedilir; onaysız push ve Faz 3 başlangıcı yoktur.
 
 Faz 2'nin aşağıdaki genel görevleri alt fazlara bölünerek sürdürülecektir.
 
@@ -87,7 +93,11 @@ Faz 2'nin aşağıdaki genel görevleri alt fazlara bölünerek sürdürülecekt
 Çıkış kriteri: Desteklenen URL gerçek metadata ve formatlarla analiz edilir;
 arayüz yanıt verir, hatalar ve eksik boyutlar doğru gösterilir.
 
-## Faz 3 — İndirme motoru
+## Faz 3 — İndirme motoru (başlatılmadı)
+
+Kullanıcı onayı sonrası Faz 2.3 commit'ini normal push ile kaydet ve remote
+eşleşmesini doğrula. Faz 3 için ayrıca yetki bekle; `DownloadRequest` modelini
+aşağıdaki gerçek işleme bağla.
 
 - Gerçek format kimliği seçimi, uyumlu ses/video eşleştirme ve FFmpeg işleme.
 - Disk/izin kontrolü, güvenli dosya adı, üzerine yazmayı önleme.

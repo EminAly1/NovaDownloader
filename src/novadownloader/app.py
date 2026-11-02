@@ -31,6 +31,7 @@ def main(argv: list[str] | None = None) -> int:
     from PySide6.QtWidgets import QApplication
 
     from novadownloader.ui.main_window import MainWindow
+    from novadownloader.ui.theme import stylesheet
 
     application = QApplication([sys.argv[0]])
     application.setApplicationName("NovaDownloader")
@@ -38,9 +39,7 @@ def main(argv: list[str] | None = None) -> int:
     application.setApplicationVersion(__version__)
     application.setDesktopFileName("io.github.novadownloader.NovaDownloader")
     application.setStyle("Fusion")
-    application.setStyleSheet(
-        files("novadownloader.ui.themes").joinpath("dark.qss").read_text(encoding="utf-8")
-    )
+    application.setStyleSheet(stylesheet())
     application.setWindowIcon(QIcon(str(files("novadownloader").joinpath("resources", "icon.svg"))))
     window = MainWindow()
     smoke_failed = False

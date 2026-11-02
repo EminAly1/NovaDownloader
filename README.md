@@ -2,11 +2,12 @@
 
 Zorin OS ve Ubuntu tabanlı Linux için Python 3.12 / PySide6 masaüstü uygulaması.
 
-**Mevcut durum: Faz 2.2.** Tekil YouTube URL doğrulaması, arka planda gerçek
-yt-dlp metadata analizi ve küçük resim desteği mevcuttur. Gerçek formatlardan
-kalite/seçim modelleri ve boyut hesabı eklendi. Kalite seçim ekranı Faz 2.3'e
-aittir; indirme ve gerçek dönüştürme henüz yoktur. Canlı YouTube doğrulaması ağ vekilinin
-403 yanıtı nedeniyle engellenmiştir; deterministik testler canlı doğrulama sayılmaz.
+**Mevcut durum: Faz 2.3.** Koyu temalı yerel Qt arayüzü, sol navigasyon,
+URL analizi, 16:9 önizleme, gerçek video/ses seçenekleri ve seçim özeti hazırdır.
+Faz 2.1 analiz ve Faz 2.2 format/boyut servisleri entegredir. İndirme butonu
+bilerek devre dışıdır; indirme motoru ve gerçek dönüştürme Faz 3'e aittir.
+Canlı YouTube doğrulaması ağ vekilinin 403 yanıtı nedeniyle engellidir;
+deterministik testler canlı doğrulama sayılmaz.
 İlerleme ve doğrulamalar: [PROJECT_PROGRESS](docs/PROJECT_PROGRESS.md).
 Sonraki fazlar yalnızca kullanıcının talimatıyla başlatılır.
 
@@ -78,7 +79,7 @@ headless test içindir; normal masaüstü kullanımında bu değişkeni ayarlama
 Zorin üzerinde ayrıca `python -m novadownloader --smoke-test` ve normal açılışla
 görsel/fare/klavye doğrulaması yapılmalıdır.
 
-## Kullanım (Faz 2.1)
+## Kullanım (Faz 2.3)
 
 URL alanına watch, youtu.be, shorts, mobil veya music YouTube bağlantısı
 yapıştırıp Enter veya “Analiz et” kullanın. Takip parametreleri ve playlist
@@ -93,11 +94,27 @@ erişim, özel/silinmiş video ve extractor hataları çözüm önerileriyle gö
 Analiz için toplam 45 saniye, her ağ isteğinde 12 saniye timeout, sınırlı retry
 kullanılır. Kısıtlamaları aşacak cookie, proxy değiştirme veya DRM desteği yoktur.
 
-Pencere araçların sürümlerini, eksikleri ve çözüm önerilerini listeler.
+Başarılı analizden sonra “Video İndir” / “Sadece Ses İndir” modunu seçin.
+Bu adlar çıktı türünü belirler; indirme başlatmaz. Kalite satırları mevcut
+formatların çözünürlük/FPS/codec ve kaynak aktarım boyutunu gösterir. “Önerilen”
+servisin önerisidir; en yüksek çözünürlük olmak zorunda değildir. Bir satırı
+tıklayın veya Tab, Space, ↑/↓, Home/End ile seçin. Modlar arasında ←/→ da çalışır.
+Aynı video içinde her modun geçerli seçimi korunur; URL değişince temizlenir.
+
+“Seçiminiz” kartında aktarım boyutu, birleştirme/remux/MP3 gereksinimi ve
+teknik ayrıntılar görülebilir. MP3 seçeneği yalnızca desteklenen gerçek bir ses
+kaynağı varsa sunulur; 192 kbps dönüşüm hedefidir. Kaynak kalitesini artırmaz.
+“Boyut:” kesin kaynak boyutunu, “Yaklaşık” tahmini, “Boyut bilinmiyor” veri
+eksikliğini belirtir. Nihai çıktı boyutu aktarım boyutundan farklı olabilir.
+İndirme butonu bu fazda etkin değildir.
+
+Sol navigasyonda İndirilenler ve Geçmiş için sonraki faz açıklamaları vardır.
+Ayarlar sayfasında uygulama tercihleri ertelenmiştir; mevcut ortam tanılaması
+ise çalışır. Araçların sürümleri, eksikleri ve çözüm önerileri burada listelenir.
 “Tekrar kontrol et” arka planda yeniden kontrol yapar. “Tanılamayı kopyala”
 yalnızca sürüm/durum/açıklamayı panoya alır; ortam değişkenleri veya özel dosya
 yollarını toplamaz. Kontrol veya analiz sürerken kapatma isteği güvenli durdurmayı
-bekler. İndirme/geçmiş/ayar sayfaları bu fazın kapsamı dışındadır.
+bekler. Gerçek dosya indirme, geçmiş kaydı ve ayar kalıcılığı henüz uygulanmadı.
 
 Teknik hata logu: `${XDG_STATE_HOME:-$HOME/.local/state}/novadownloader/application.log`.
 Loglar sınırlı boyutta tutulur; URL ve yaygın kimlik doğrulama alanları maskelenir.
@@ -119,6 +136,7 @@ adlarına ihtiyaç duyarsa ilgili hata ayrıca değerlendirilmelidir.
 - [İlerleme ve test kanıtı](docs/PROJECT_PROGRESS.md)
 - [Bağımlılık kararları ve resmî kaynaklar](docs/DEPENDENCIES.md)
 - [Format seçimi ve boyut modeli](docs/FORMAT_SELECTION.md)
+- [Arayüz akışı ve ekran görüntüleri](docs/UI_REVIEW.md)
 
 Uygulama verileri için XDG yolları tanımlıdır; bu faz yalnızca teknik log yazar,
 kişisel ayar veya görev verisi saklamaz. Kaynak kod MIT lisanslıdır. Qt/PySide6 ve diğer bağımlılıkların
